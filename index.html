@@ -131,77 +131,67 @@
         </div>
     </div>
 
-    <script>
-        const { createApp } = Vue;
+<script>
+    const { createApp } = Vue;
 
-        // ¡IMPORTANTE! PEGA TU URL DE SHEETDB EXACTAMENTE AQUÍ ABAJO ENTRE LAS COMILLAS
-        const SHEETDB_URL = "https://sheetdb.io/api/v1/qk3dben7rmg65"; 
+    const SHEETDB_URL = "https://sheetdb.io/api/v1/qk3dben7rmg65"; 
 
-        createApp({
-            data() {
-                return {
-                    propiedades: [],
-                    cargando: true
-                }
-            },
-            mounted() {
-                if (SHEETDB_URL === "https://sheetdb.io/api/v1/qk3dben7rmg65") {
-                    alert("⚠️️ Falta colocar el enlace de SheetDB en el código fuente para cargar los datos.");
+    createApp({
+        data() {
+            return {
+                propiedades: [],
+                cargando: true
+            }
+        },
+        mounted() {
+            fetch(SHEETDB_URL)
+                .then(response => response.json())
+                .then(data => {
+                    this.propiedades = data.map(item => ({...item, editando: false}));
                     this.cargando = false;
-                    return;
-                }
-                
-                // Lee los datos desde Google Sheets al iniciar
-                fetch(SHEETDB_URL)
-                    .then(response => response.json())
-                    .then(data => {
-                        this.propiedades = data.map(item => ({...item, editando: false}));
-                        this.cargando = false;
-                    })
-                    .catch(error => {
-                        alert("Error al conectar con la base de datos.");
-                        this.cargando = false;
-                    });
+                })
+                .catch(error => {
+                    alert("Error al conectar con la base de datos.");
+                    this.cargando = false;
+                });
+        },
+        methods: {
+            agregarPropiedad() {
+                const nueva = {
+                    id: Date.now().toString(),
+                    tipo: "", ubicacion: "", dormitorios: 0, banos: 0, superficie: 0,
+                    precio: 0, estado: "En tasación", captador: "", asesor: "",
+                    tipoOperacion: "Reconversión GNI", leadAsociado: "", linkPublicacion: "",
+                    editando: true, esNueva: true
+                };
+                this.propiedades.unshift(nueva);
             },
-            methods: {
-                agregarPropiedad() {
-                    const nueva = {
-                        id: Date.now().toString(),
-                        tipo: "", ubicacion: "", dormitorios: 0, banos: 0, superficie: 0,
-                        precio: 0, estado: "En tasación", captador: "", asesor: "",
-                        tipoOperacion: "Reconversión GNI", leadAsociado: "", linkPublicacion: "",
-                        editando: true, esNueva: true
-                    };
-                    this.propiedades.unshift(nueva);
-                },
-                guardarCambios(prop) {
-                    prop.editando = false;
-                    
-                    const metodo = prop.esNueva ? 'POST' : 'PUT';
-                    const endpoint = prop.esNueva ? SHEETDB_URL : `${SHEETDB_URL}/id/${prop.id}`;
-                    
-                    // Prepara el objeto exacto para guardar en Excel
-                    const datosLimpios = { ...prop };
-                    delete datosLimpios.editando;
-                    delete datosLimpios.esNueva;
+            guardarCambios(prop) {
+                prop.editando = false;
+                
+                const metodo = prop.esNueva ? 'POST' : 'PUT';
+                const endpoint = prop.esNueva ? SHEETDB_URL : `${SHEETDB_URL}/id/${prop.id}`;
+                
+                const datosLimpios = { ...prop };
+                delete datosLimpios.editando;
+                delete datosLimpios.esNueva;
 
-                    // Guarda en Google Sheets
-                    fetch(endpoint, {
-                        method: metodo,
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ data: [datosLimpios] })
-                    }).then(() => {
-                        prop.esNueva = false;
-                    });
-                },
-                eliminarPropiedad(id) {
-                    if(confirm("¿Estás seguro de eliminar este inmueble definitivamente?")) {
-                        this.propiedades = this.propiedades.filter(p => p.id !== id);
-                        fetch(`${SHEETDB_URL}/id/${id}`, { method: 'DELETE' });
-                    }
+                fetch(endpoint, {
+                    method: metodo,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: [datosLimpios] })
+                }).then(() => {
+                    prop.esNueva = false;
+                });
+            },
+            eliminarPropiedad(id) {
+                if(confirm("¿Estás seguro de eliminar este inmueble definitivamente?")) {
+                    this.propiedades = this.propiedades.filter(p => p.id !== id);
+                    fetch(`${SHEETDB_URL}/id/${id}`, { method: 'DELETE' });
                 }
             }
-        }).mount('#app')
-    </script>
+        }
+    }).mount('#app')
+</script>
 </body>
 </html>
