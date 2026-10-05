@@ -6,21 +6,13 @@
     <title>Cartera GNI prop - UEC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- Importamos tipografía corporativa -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Montserrat', 'sans-serif'],
-                    },
-                    colors: {
-                        gni: {
-                            blue: '#1c2242',
-                            light: '#2a325a'
-                        }
-                    }
+                    fontFamily: { sans: ['Montserrat', 'sans-serif'] },
+                    colors: { gni: { blue: '#1c2242', light: '#2a325a' } }
                 }
             }
         }
@@ -28,10 +20,8 @@
 </head>
 <body class="bg-gray-50 p-8 font-sans text-gray-800">
     <div id="app" class="max-w-7xl mx-auto">
-        <!-- Encabezado con Logo -->
         <header class="mb-8 border-b-2 border-gni-blue pb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div class="flex items-center gap-6">
-                <!-- Imagen del logo local -->
                 <img src="logo.png" alt="GNI Construimos Confianza" class="h-16 md:h-20 object-contain">
                 <div>
                     <h1 class="text-3xl font-extrabold text-gni-blue uppercase tracking-tight">Cartera Propiedades</h1>
@@ -48,11 +38,14 @@
             </div>
         </header>
 
-        <!-- Grilla de Propiedades -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div v-for="prop in propiedades" :key="prop.id" class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+        <div v-if="cargando" class="text-center py-12 text-xl font-bold text-gray-500">
+            Conectando con la base de datos...
+        </div>
+
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div v-for="prop in propiedades" :key="prop.id" class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
                 
-                <!-- VISTA DE LECTURA -->
+                <!-- VISTA LECTURA -->
                 <div v-if="!prop.editando" class="p-6">
                     <div class="flex justify-between items-start mb-3">
                         <h2 class="text-xl font-bold text-gni-blue leading-tight">{{ prop.tipo }} <br><span class="text-gray-600 text-lg font-semibold">{{ prop.ubicacion }}</span></h2>
@@ -61,7 +54,7 @@
                         </span>
                     </div>
                     
-                    <div class="text-3xl font-extrabold text-gni-blue mb-4">USD {{ prop.precio.toLocaleString() }}</div>
+                    <div class="text-3xl font-extrabold text-gni-blue mb-4">USD {{ Number(prop.precio).toLocaleString() }}</div>
                     
                     <div class="space-y-2 text-sm text-gray-700 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
                         <div class="flex items-center gap-2">
@@ -70,12 +63,10 @@
                         </div>
                         <hr class="my-2 border-gray-200">
                         <div class="flex items-center gap-2"><span class="font-bold">Captación:</span> {{ prop.captador }}</div>
-                        <div class="flex items-center gap-2"><span class="font-bold">Asesor a cargo:</span> {{ prop.asesor }}</div>
+                        <div class="flex items-center gap-2"><span class="font-bold">Asesor asignado:</span> {{ prop.asesor }}</div>
                         <div class="flex items-center gap-2">
                             <span class="font-bold">Operación:</span> 
-                            <span :class="prop.tipoOperacion === 'Reconversión GNI' ? 'text-gni-blue font-bold' : 'text-gray-600'">
-                                {{ prop.tipoOperacion }}
-                            </span>
+                            <span :class="prop.tipoOperacion === 'Reconversión GNI' ? 'text-gni-blue font-bold' : 'text-gray-600'">{{ prop.tipoOperacion }}</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="font-bold">Publicación:</span> 
@@ -90,93 +81,45 @@
                         </div>
                     </div>
                     
-                    <button @click="prop.editando = true" class="w-full bg-white text-gni-blue font-bold py-2.5 rounded-lg hover:bg-gray-50 border-2 border-gni-blue transition">
+                    <button @click="prop.editando = true" class="w-full bg-white text-gni-blue font-bold py-2.5 rounded-lg border-2 border-gni-blue hover:bg-gray-50 transition">
                         Editar Ficha
                     </button>
                 </div>
 
-                <!-- MODO EDICIÓN -->
+                <!-- VISTA EDICIÓN -->
                 <div v-else class="p-6 bg-gray-50 border-t-4 border-gni-blue">
-                    <h3 class="font-bold text-gni-blue mb-4 pb-2 border-b border-gray-300 uppercase tracking-wide text-sm">Modificando Inmueble</h3>
-                    
+                    <h3 class="font-bold text-gni-blue mb-4 pb-2 border-b border-gray-300 uppercase text-sm">Modificando Inmueble</h3>
                     <div class="space-y-3 text-sm">
                         <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block font-semibold text-gray-700 mb-1">Tipo</label>
-                                <input type="text" v-model="prop.tipo" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-gni-blue">
-                            </div>
-                            <div>
-                                <label class="block font-semibold text-gray-700 mb-1">Ubicación</label>
-                                <input type="text" v-model="prop.ubicacion" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-gni-blue">
-                            </div>
+                            <div><label class="block font-semibold mb-1">Tipo</label><input type="text" v-model="prop.tipo" class="w-full p-2 border rounded"></div>
+                            <div><label class="block font-semibold mb-1">Ubicación</label><input type="text" v-model="prop.ubicacion" class="w-full p-2 border rounded"></div>
                         </div>
-
+                        <div><label class="block font-semibold mb-1">Precio (USD)</label><input type="number" v-model.number="prop.precio" class="w-full p-2 border rounded font-bold text-gni-blue"></div>
+                        <div><label class="block font-semibold mb-1">Lead / Proyecto destino</label><input type="text" v-model="prop.leadAsociado" class="w-full p-2 border rounded bg-blue-50"></div>
                         <div>
-                            <label class="block font-semibold text-gray-700 mb-1">Precio de Cierre (USD)</label>
-                            <input type="number" v-model.number="prop.precio" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-gni-blue font-bold text-lg text-gni-blue">
-                        </div>
-
-                        <div>
-                            <label class="block font-semibold text-gray-700 mb-1">Lead / Proyecto destino</label>
-                            <input type="text" v-model="prop.leadAsociado" placeholder="Ej: Juan P. - Cardinales Cofico" class="w-full p-2 border border-gray-300 rounded bg-blue-50 focus:outline-none focus:border-gni-blue">
-                        </div>
-                        
-                        <div>
-                            <label class="block font-semibold text-gray-700 mb-1">Estrategia Comercial</label>
-                            <select v-model="prop.tipoOperacion" class="w-full p-2 border border-gray-300 rounded bg-white focus:outline-none focus:border-gni-blue">
-                                <option>Reconversión GNI</option>
-                                <option>Solo Venta</option>
+                            <label class="block font-semibold mb-1">Estrategia Comercial</label>
+                            <select v-model="prop.tipoOperacion" class="w-full p-2 border rounded bg-white">
+                                <option>Reconversión GNI</option><option>Solo Venta</option>
                             </select>
                         </div>
-
                         <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block font-semibold text-gray-700 mb-1">Captador</label>
-                                <input type="text" v-model="prop.captador" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-gni-blue">
-                            </div>
-                            <div>
-                                <label class="block font-semibold text-gray-700 mb-1">Asesor asignado</label>
-                                <input type="text" v-model="prop.asesor" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-gni-blue">
-                            </div>
+                            <div><label class="block font-semibold mb-1">Captador</label><input type="text" v-model="prop.captador" class="w-full p-2 border rounded"></div>
+                            <div><label class="block font-semibold mb-1">Asesor asignado</label><input type="text" v-model="prop.asesor" class="w-full p-2 border rounded"></div>
                         </div>
-
+                        <div><label class="block font-semibold mb-1">Link Externa</label><input type="url" v-model="prop.linkPublicacion" class="w-full p-2 border rounded"></div>
+                        <div class="grid grid-cols-3 gap-2 pt-3 border-t mt-3">
+                            <div><label class="block text-xs font-bold mb-1">Dorm.</label><input type="number" v-model.number="prop.dormitorios" class="w-full p-1.5 border rounded text-center"></div>
+                            <div><label class="block text-xs font-bold mb-1">Baños</label><input type="number" v-model.number="prop.banos" class="w-full p-1.5 border rounded text-center"></div>
+                            <div><label class="block text-xs font-bold mb-1">m²</label><input type="number" v-model.number="prop.superficie" class="w-full p-1.5 border rounded text-center"></div>
+                        </div>
                         <div>
-                            <label class="block font-semibold text-gray-700 mb-1">Link de Publicación Externa</label>
-                            <div class="flex gap-2">
-                                <input type="url" v-model="prop.linkPublicacion" placeholder="https://..." class="w-full p-2 border border-gray-300 rounded flex-1 focus:outline-none focus:border-gni-blue">
-                                <button @click="simularExtraccion(prop)" class="bg-gray-800 text-white px-3 rounded hover:bg-black font-bold transition text-xs">
-                                    Extraer
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="grid grid-cols-3 gap-2 pt-3 border-t border-gray-200 mt-3">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-600 mb-1">Dormitorios</label>
-                                <input type="number" v-model.number="prop.dormitorios" class="w-full p-1.5 border border-gray-300 rounded text-center">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-600 mb-1">Baños</label>
-                                <input type="number" v-model.number="prop.banos" class="w-full p-1.5 border border-gray-300 rounded text-center">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-600 mb-1">Sup. (m²)</label>
-                                <input type="number" v-model.number="prop.superficie" class="w-full p-1.5 border border-gray-300 rounded text-center">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block font-semibold text-gray-700 mb-1 mt-2">Estado del Activo</label>
-                            <select v-model="prop.estado" class="w-full p-2 border border-gray-300 rounded bg-white font-bold focus:outline-none focus:border-gni-blue">
-                                <option>En tasación</option>
-                                <option>Activo</option>
-                                <option>Reservado</option>
-                                <option>Vendido</option>
+                            <label class="block font-semibold mb-1 mt-2">Estado</label>
+                            <select v-model="prop.estado" class="w-full p-2 border rounded bg-white font-bold">
+                                <option>En tasación</option><option>Activo</option><option>Reservado</option><option>Vendido</option>
                             </select>
                         </div>
                     </div>
-                    
-                    <button @click="prop.editando = false" class="mt-6 w-full bg-gni-blue text-white font-bold py-3 rounded-lg hover:bg-gni-light shadow-lg transition">
+                    <button @click="guardarCambios(prop)" class="mt-6 w-full bg-gni-blue text-white font-bold py-3 rounded-lg hover:bg-gni-light shadow-lg transition">
                         Guardar Ficha
                     </button>
                     <button @click="eliminarPropiedad(prop.id)" class="mt-3 w-full text-red-500 text-xs font-bold hover:text-red-700 uppercase tracking-wider">
@@ -191,84 +134,71 @@
     <script>
         const { createApp } = Vue;
 
+        // ¡IMPORTANTE! PEGA TU URL DE SHEETDB EXACTAMENTE AQUÍ ABAJO ENTRE LAS COMILLAS
+        const SHEETDB_URL = "https://sheetdb.io/api/v1/qk3dben7rmg65"; 
+
         createApp({
             data() {
                 return {
-                    propiedades: [
-                        { 
-                            id: 1, 
-                            tipo: "Casa", 
-                            ubicacion: "Cerro de las Rosas", 
-                            dormitorios: 3, banos: 2, superficie: 150, 
-                            precio: 80000, 
-                            estado: "En tasación",
-                            captador: "Hernán Oronel",
-                            asesor: "Por asignar",
-                            tipoOperacion: "Reconversión GNI",
-                            leadAsociado: "Marcos T. / Pienza",
-                            linkPublicacion: "",
-                            editando: false
-                        },
-                        { 
-                            id: 2, 
-                            tipo: "Departamento", 
-                            ubicacion: "Nueva Córdoba", 
-                            dormitorios: 1, banos: 1, superficie: 45, 
-                            precio: 65000, 
-                            estado: "Activo",
-                            captador: "Ana García",
-                            asesor: "Hernán Oronel",
-                            tipoOperacion: "Solo Venta",
-                            leadAsociado: "Sin destino GNI",
-                            linkPublicacion: "https://zonaprop.com.ar/ejemplo",
-                            editando: false
-                        },
-                        { 
-                            id: 3, 
-                            tipo: "Dúplex", 
-                            ubicacion: "Valle Escondido", 
-                            dormitorios: 2, banos: 2, superficie: 110, 
-                            precio: 130000, 
-                            estado: "Activo",
-                            captador: "Hernán Oronel",
-                            asesor: "Hernán Oronel",
-                            tipoOperacion: "Reconversión GNI",
-                            leadAsociado: "Familia Ruiz / Cardinales Río Cuarto",
-                            linkPublicacion: "",
-                            editando: false
-                        }
-                    ]
+                    propiedades: [],
+                    cargando: true
                 }
+            },
+            mounted() {
+                if (SHEETDB_URL === "https://sheetdb.io/api/v1/qk3dben7rmg65") {
+                    alert("⚠️️ Falta colocar el enlace de SheetDB en el código fuente para cargar los datos.");
+                    this.cargando = false;
+                    return;
+                }
+                
+                // Lee los datos desde Google Sheets al iniciar
+                fetch(SHEETDB_URL)
+                    .then(response => response.json())
+                    .then(data => {
+                        this.propiedades = data.map(item => ({...item, editando: false}));
+                        this.cargando = false;
+                    })
+                    .catch(error => {
+                        alert("Error al conectar con la base de datos.");
+                        this.cargando = false;
+                    });
             },
             methods: {
                 agregarPropiedad() {
-                    const nuevaPropiedad = {
-                        id: Date.now(),
-                        tipo: "", 
-                        ubicacion: "", 
-                        dormitorios: 0, banos: 0, superficie: 0, 
-                        precio: 0, 
-                        estado: "En tasación",
-                        captador: "",
-                        asesor: "",
-                        tipoOperacion: "Reconversión GNI",
-                        leadAsociado: "",
-                        linkPublicacion: "",
-                        editando: true
+                    const nueva = {
+                        id: Date.now().toString(),
+                        tipo: "", ubicacion: "", dormitorios: 0, banos: 0, superficie: 0,
+                        precio: 0, estado: "En tasación", captador: "", asesor: "",
+                        tipoOperacion: "Reconversión GNI", leadAsociado: "", linkPublicacion: "",
+                        editando: true, esNueva: true
                     };
-                    this.propiedades.unshift(nuevaPropiedad);
+                    this.propiedades.unshift(nueva);
+                },
+                guardarCambios(prop) {
+                    prop.editando = false;
+                    
+                    const metodo = prop.esNueva ? 'POST' : 'PUT';
+                    const endpoint = prop.esNueva ? SHEETDB_URL : `${SHEETDB_URL}/id/${prop.id}`;
+                    
+                    // Prepara el objeto exacto para guardar en Excel
+                    const datosLimpios = { ...prop };
+                    delete datosLimpios.editando;
+                    delete datosLimpios.esNueva;
+
+                    // Guarda en Google Sheets
+                    fetch(endpoint, {
+                        method: metodo,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: [datosLimpios] })
+                    }).then(() => {
+                        prop.esNueva = false;
+                    });
                 },
                 eliminarPropiedad(id) {
-                    if(confirm("¿Estás seguro de que querés eliminar esta propiedad de la cartera?")) {
+                    if(confirm("¿Estás seguro de eliminar este inmueble definitivamente?")) {
                         this.propiedades = this.propiedades.filter(p => p.id !== id);
+                        fetch(`${SHEETDB_URL}/id/${id}`, { method: 'DELETE' });
                     }
-                },
-                simularExtraccion(prop) {
-                    if(!prop.linkPublicacion) {
-                        alert("Primero necesitás pegar un link válido de la publicación.");
-                        return;
-                    }
-                    alert("Función de extracción en desarrollo. En producción, completará los datos estructurales automáticamente.");
                 }
             }
         }).mount('#app')
