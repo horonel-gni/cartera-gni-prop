@@ -32,7 +32,6 @@
                 </div>
             </div>
             
-            <!-- Botones de Navegación -->
             <div class="flex gap-2 bg-gray-200 p-1 rounded-lg">
                 <button @click="vistaActual = 'cartera'" :class="vistaActual === 'cartera' ? 'bg-white text-gni-blue shadow' : 'text-gray-600 hover:text-gni-blue'" class="px-6 py-2 rounded-md font-bold transition">
                     Cartera Propiedades
@@ -44,7 +43,7 @@
         </header>
 
         <!-- ========================================== -->
-        <!-- PESTAÑA 1: CARTERA DE PROPIEDADES (TU WEB ORIGINAL) -->
+        <!-- PESTAÑA 1: CARTERA DE PROPIEDADES -->
         <!-- ========================================== -->
         <div v-if="vistaActual === 'cartera'">
             <div class="flex justify-between items-center mb-6">
@@ -128,97 +127,163 @@
         </div>
 
         <!-- ========================================== -->
-        <!-- PESTAÑA 2: DASHBOARD DE RENDIMIENTO (NUEVO)-->
+        <!-- PESTAÑA 2: DASHBOARD (FINANZAS Y PORTALES) -->
         <!-- ========================================== -->
         <div v-if="vistaActual === 'dashboard'">
             
-            <!-- Tarjetas de Resumen Ejecutivo -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-blue-500">
-                    <p class="text-sm font-bold text-gray-500 uppercase">Total Visualizaciones</p>
-                    <p class="text-3xl font-extrabold text-gni-blue mt-1">{{ totalesDashboard.visualizaciones }}</p>
+            <!-- BLOQUE 1: FLUJO DE CAJA (NUEVO) -->
+            <div class="mb-12">
+                <h2 class="text-2xl font-extrabold text-gni-blue mb-4 border-b-2 border-gray-200 pb-2">Flujo de Caja UEC</h2>
+                
+                <!-- Tarjetas de Resumen Financiero -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500">
+                        <p class="text-sm font-bold text-gray-500 uppercase tracking-wide">Total Ingresos</p>
+                        <p class="text-4xl font-extrabold text-green-600 mt-2">USD {{ totalesFinanzas.ingresos.toLocaleString() }}</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-red-500">
+                        <p class="text-sm font-bold text-gray-500 uppercase tracking-wide">Costos Operativos</p>
+                        <p class="text-4xl font-extrabold text-red-500 mt-2">USD {{ totalesFinanzas.egresos.toLocaleString() }}</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-gni-blue">
+                        <p class="text-sm font-bold text-gray-500 uppercase tracking-wide">Balance Neto</p>
+                        <p class="text-4xl font-extrabold text-gni-blue mt-2" :class="totalesFinanzas.neto < 0 ? 'text-red-600' : ''">
+                            USD {{ totalesFinanzas.neto.toLocaleString() }}
+                        </p>
+                    </div>
                 </div>
-                <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-green-500">
-                    <p class="text-sm font-bold text-gray-500 uppercase">Total Consultas</p>
-                    <p class="text-3xl font-extrabold text-gni-blue mt-1">{{ totalesDashboard.consultas }}</p>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-yellow-500">
-                    <p class="text-sm font-bold text-gray-500 uppercase">Total Visitas</p>
-                    <p class="text-3xl font-extrabold text-gni-blue mt-1">{{ totalesDashboard.visitas }}</p>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-gni-blue">
-                    <p class="text-sm font-bold text-gray-500 uppercase">Cierres / Reservas</p>
-                    <p class="text-3xl font-extrabold text-gni-blue mt-1">{{ totalesDashboard.cierres }} <span class="text-lg text-gray-400">/ {{ totalesDashboard.reservas }}</span></p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Formulario Finanzas -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 lg:col-span-1 h-fit">
+                        <h3 class="text-lg font-bold text-gni-blue mb-4">Registrar Movimiento</h3>
+                        <form @submit.prevent="guardarFinanza" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Fecha</label>
+                                <input type="date" v-model="nuevaFinanza.fecha" required class="w-full p-2 border rounded">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Concepto</label>
+                                <input type="text" v-model="nuevaFinanza.concepto" placeholder="Ej: Comisión venta, Suscripción portal..." required class="w-full p-2 border rounded">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">Tipo</label>
+                                    <select v-model="nuevaFinanza.tipo" required class="w-full p-2 border rounded bg-white">
+                                        <option value="Ingreso">Ingreso (+)</option>
+                                        <option value="Egreso">Egreso (-)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">Monto (USD)</label>
+                                    <input type="number" v-model.number="nuevaFinanza.monto" min="0" required class="w-full p-2 border rounded font-bold text-gni-blue">
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-gni-blue text-white font-bold py-3 rounded-lg hover:bg-gni-light transition mt-4">
+                                Guardar Movimiento
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Tabla Historial Finanzas -->
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-100 lg:col-span-2 overflow-hidden h-fit">
+                        <div class="p-4 border-b border-gray-200 bg-gray-50"><h3 class="font-bold text-gni-blue">Libro Mayor (Historial)</h3></div>
+                        <div class="overflow-x-auto max-h-80 overflow-y-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-200 text-gray-700 text-xs uppercase tracking-wider">
+                                        <th class="p-3 font-semibold">Fecha</th>
+                                        <th class="p-3 font-semibold">Concepto</th>
+                                        <th class="p-3 font-semibold text-right">Ingreso</th>
+                                        <th class="p-3 font-semibold text-right">Egreso</th>
+                                        <th class="p-3"></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm text-gray-700 divide-y divide-gray-200">
+                                    <tr v-if="finanzas.length === 0"><td colspan="5" class="p-6 text-center text-gray-500 italic">No hay movimientos financieros.</td></tr>
+                                    <tr v-for="fin in finanzasOrdenadas" :key="fin.id" class="hover:bg-gray-50">
+                                        <td class="p-3 font-semibold">{{ formatearFecha(fin.fecha) }}</td>
+                                        <td class="p-3 text-gray-600">{{ fin.concepto }}</td>
+                                        <td class="p-3 text-right font-bold text-green-600">{{ fin.tipo === 'Ingreso' ? 'USD ' + Number(fin.monto).toLocaleString() : '-' }}</td>
+                                        <td class="p-3 text-right font-bold text-red-500">{{ fin.tipo === 'Egreso' ? 'USD ' + Number(fin.monto).toLocaleString() : '-' }}</td>
+                                        <td class="p-3 text-center"><button @click="eliminarFinanza(fin.id)" class="text-red-500 hover:text-red-700" title="Eliminar">✕</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Formulario de Carga Semanal -->
-                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 lg:col-span-1 h-fit">
-                    <h2 class="text-xl font-bold text-gni-blue mb-4 pb-2 border-b border-gray-200">Cargar Reporte Semanal</h2>
-                    <form @submit.prevent="guardarMetrica" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Fecha del reporte</label>
-                            <input type="date" v-model="nuevaMetrica.fecha" required class="w-full p-2 border rounded focus:border-gni-blue">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Portal Inmobiliario</label>
-                            <select v-model="nuevaMetrica.portal" required class="w-full p-2 border rounded focus:border-gni-blue bg-white">
-                                <option>ZonaProp</option>
-                                <option>MercadoLibre</option>
-                                <option>Clasificados LaVoz</option>
-                            </select>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block text-xs font-bold text-gray-600 mb-1">Visualizaciones</label><input type="number" v-model.number="nuevaMetrica.visualizaciones" min="0" required class="w-full p-2 border rounded"></div>
-                            <div><label class="block text-xs font-bold text-gray-600 mb-1">Consultas</label><input type="number" v-model.number="nuevaMetrica.consultas" min="0" required class="w-full p-2 border rounded"></div>
-                            <div><label class="block text-xs font-bold text-gray-600 mb-1">Visitas Físicas</label><input type="number" v-model.number="nuevaMetrica.visitas" min="0" required class="w-full p-2 border rounded"></div>
-                            <div><label class="block text-xs font-bold text-gray-600 mb-1">Reservas</label><input type="number" v-model.number="nuevaMetrica.reservas" min="0" required class="w-full p-2 border rounded"></div>
-                        </div>
-                        <div><label class="block text-xs font-bold text-gray-600 mb-1">Cierres Efectivos</label><input type="number" v-model.number="nuevaMetrica.cierres" min="0" required class="w-full p-2 border rounded"></div>
-                        
-                        <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition mt-4">
-                            Guardar Métricas
-                        </button>
-                    </form>
+            <!-- BLOQUE 2: RENDIMIENTO DE PORTALES (ORIGINAL) -->
+            <div>
+                <h2 class="text-2xl font-extrabold text-gni-blue mb-4 border-b-2 border-gray-200 pb-2">Rendimiento en Portales</h2>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-blue-500">
+                        <p class="text-sm font-bold text-gray-500 uppercase">Total Visualizaciones</p>
+                        <p class="text-3xl font-extrabold text-gni-blue mt-1">{{ totalesDashboard.visualizaciones }}</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-green-500">
+                        <p class="text-sm font-bold text-gray-500 uppercase">Total Consultas</p>
+                        <p class="text-3xl font-extrabold text-gni-blue mt-1">{{ totalesDashboard.consultas }}</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-yellow-500">
+                        <p class="text-sm font-bold text-gray-500 uppercase">Total Visitas</p>
+                        <p class="text-3xl font-extrabold text-gni-blue mt-1">{{ totalesDashboard.visitas }}</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-gni-blue">
+                        <p class="text-sm font-bold text-gray-500 uppercase">Cierres / Reservas</p>
+                        <p class="text-3xl font-extrabold text-gni-blue mt-1">{{ totalesDashboard.cierres }} <span class="text-lg text-gray-400">/ {{ totalesDashboard.reservas }}</span></p>
+                    </div>
                 </div>
 
-                <!-- Historial de Cargas -->
-                <div class="bg-white rounded-xl shadow-lg border border-gray-100 lg:col-span-2 overflow-hidden">
-                    <div class="p-6 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-gni-blue">Historial de Rendimiento</h2>
-                        <span class="text-sm font-bold text-gray-500">Últimos registros</span>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 lg:col-span-1 h-fit">
+                        <h3 class="text-lg font-bold text-gni-blue mb-4">Cargar Reporte Semanal</h3>
+                        <form @submit.prevent="guardarMetrica" class="space-y-4">
+                            <div><label class="block text-sm font-bold text-gray-700 mb-1">Fecha</label><input type="date" v-model="nuevaMetrica.fecha" required class="w-full p-2 border rounded"></div>
+                            <div><label class="block text-sm font-bold text-gray-700 mb-1">Portal</label><select v-model="nuevaMetrica.portal" required class="w-full p-2 border rounded bg-white"><option>ZonaProp</option><option>MercadoLibre</option><option>Clasificados LaVoz</option></select></div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-xs font-bold text-gray-600 mb-1">Visualiz.</label><input type="number" v-model.number="nuevaMetrica.visualizaciones" min="0" required class="w-full p-2 border rounded"></div>
+                                <div><label class="block text-xs font-bold text-gray-600 mb-1">Consultas</label><input type="number" v-model.number="nuevaMetrica.consultas" min="0" required class="w-full p-2 border rounded"></div>
+                                <div><label class="block text-xs font-bold text-gray-600 mb-1">Visitas Físicas</label><input type="number" v-model.number="nuevaMetrica.visitas" min="0" required class="w-full p-2 border rounded"></div>
+                                <div><label class="block text-xs font-bold text-gray-600 mb-1">Reservas</label><input type="number" v-model.number="nuevaMetrica.reservas" min="0" required class="w-full p-2 border rounded"></div>
+                            </div>
+                            <div><label class="block text-xs font-bold text-gray-600 mb-1">Cierres Efectivos</label><input type="number" v-model.number="nuevaMetrica.cierres" min="0" required class="w-full p-2 border rounded"></div>
+                            <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition mt-4">Guardar Métricas</button>
+                        </form>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-gni-blue text-white text-sm uppercase tracking-wider">
-                                    <th class="p-4 font-semibold">Fecha</th>
-                                    <th class="p-4 font-semibold">Portal</th>
-                                    <th class="p-4 font-semibold text-center">Visual.</th>
-                                    <th class="p-4 font-semibold text-center">Consult.</th>
-                                    <th class="p-4 font-semibold text-center">Visitas</th>
-                                    <th class="p-4 font-semibold text-center">Res/Cierres</th>
-                                    <th class="p-4 font-semibold text-center"></th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-sm text-gray-700 divide-y divide-gray-200">
-                                <tr v-if="metricas.length === 0">
-                                    <td colspan="7" class="p-8 text-center text-gray-500 italic">No hay métricas cargadas aún.</td>
-                                </tr>
-                                <tr v-for="metrica in metricasOrdenadas" :key="metrica.id" class="hover:bg-gray-50">
-                                    <td class="p-4 font-bold">{{ formatearFecha(metrica.fecha) }}</td>
-                                    <td class="p-4 font-semibold text-gni-blue">{{ metrica.portal }}</td>
-                                    <td class="p-4 text-center">{{ metrica.visualizaciones }}</td>
-                                    <td class="p-4 text-center font-bold text-blue-600">{{ metrica.consultas }}</td>
-                                    <td class="p-4 text-center font-bold text-green-600">{{ metrica.visitas }}</td>
-                                    <td class="p-4 text-center">{{ metrica.reservas }} / {{ metrica.cierres }}</td>
-                                    <td class="p-4 text-center">
-                                        <button @click="eliminarMetrica(metrica.id)" class="text-red-500 hover:text-red-700 font-bold" title="Eliminar">✕</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-100 lg:col-span-2 overflow-hidden h-fit">
+                        <div class="p-4 border-b border-gray-200 bg-gray-50"><h3 class="font-bold text-gni-blue">Historial de Rendimiento</h3></div>
+                        <div class="overflow-x-auto max-h-80 overflow-y-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-200 text-gray-700 text-xs uppercase tracking-wider">
+                                        <th class="p-3 font-semibold">Fecha</th>
+                                        <th class="p-3 font-semibold">Portal</th>
+                                        <th class="p-3 font-semibold text-center">Vis.</th>
+                                        <th class="p-3 font-semibold text-center">Cons.</th>
+                                        <th class="p-3 font-semibold text-center">Visitas</th>
+                                        <th class="p-3 font-semibold text-center">Res/Cierres</th>
+                                        <th class="p-3"></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm text-gray-700 divide-y divide-gray-200">
+                                    <tr v-if="metricas.length === 0"><td colspan="7" class="p-6 text-center text-gray-500 italic">No hay métricas cargadas.</td></tr>
+                                    <tr v-for="metrica in metricasOrdenadas" :key="metrica.id" class="hover:bg-gray-50">
+                                        <td class="p-3 font-semibold">{{ formatearFecha(metrica.fecha) }}</td>
+                                        <td class="p-3 font-bold text-gni-blue">{{ metrica.portal }}</td>
+                                        <td class="p-3 text-center">{{ metrica.visualizaciones }}</td>
+                                        <td class="p-3 text-center text-blue-600 font-bold">{{ metrica.consultas }}</td>
+                                        <td class="p-3 text-center text-green-600 font-bold">{{ metrica.visitas }}</td>
+                                        <td class="p-3 text-center">{{ metrica.reservas }} / {{ metrica.cierres }}</td>
+                                        <td class="p-3 text-center"><button @click="eliminarMetrica(metrica.id)" class="text-red-500 hover:text-red-700 font-bold">✕</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -229,38 +294,35 @@
     <script>
         const { createApp } = Vue;
 
-        // URL original (Propiedades - Hoja 1 por defecto)
         const SHEETDB_URL = "https://sheetdb.io/api/v1/qk3dben7rmg65"; 
-        // Nueva URL apuntando específicamente a la hoja de métricas
         const SHEETDB_METRICAS_URL = "https://sheetdb.io/api/v1/qk3dben7rmg65?sheet=Metricas";
+        const SHEETDB_FINANZAS_URL = "https://sheetdb.io/api/v1/qk3dben7rmg65?sheet=Finanzas";
 
         createApp({
             data() {
                 return {
-                    vistaActual: 'cartera', // 'cartera' o 'dashboard'
+                    vistaActual: 'cartera',
                     propiedades: [],
                     cargandoPropiedades: true,
                     
-                    // Datos del Dashboard
                     metricas: [],
                     nuevaMetrica: {
                         fecha: new Date().toISOString().split('T')[0],
-                        portal: 'ZonaProp',
-                        visualizaciones: 0,
-                        consultas: 0,
-                        visitas: 0,
-                        reservas: 0,
-                        cierres: 0
+                        portal: 'ZonaProp', visualizaciones: 0, consultas: 0, visitas: 0, reservas: 0, cierres: 0
+                    },
+
+                    finanzas: [],
+                    nuevaFinanza: {
+                        fecha: new Date().toISOString().split('T')[0],
+                        concepto: '', tipo: 'Ingreso', monto: 0
                     }
                 }
             },
             computed: {
                 metricasOrdenadas() {
-                    // Ordena de la carga más reciente a la más antigua
                     return [...this.metricas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
                 },
                 totalesDashboard() {
-                    // Calcula los totales para las tarjetas de arriba
                     return this.metricas.reduce((acc, curr) => {
                         acc.visualizaciones += Number(curr.visualizaciones) || 0;
                         acc.consultas += Number(curr.consultas) || 0;
@@ -269,39 +331,44 @@
                         acc.cierres += Number(curr.cierres) || 0;
                         return acc;
                     }, { visualizaciones: 0, consultas: 0, visitas: 0, reservas: 0, cierres: 0 });
+                },
+                finanzasOrdenadas() {
+                    return [...this.finanzas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                },
+                totalesFinanzas() {
+                    const totales = this.finanzas.reduce((acc, curr) => {
+                        if (curr.tipo === 'Ingreso') acc.ingresos += Number(curr.monto) || 0;
+                        if (curr.tipo === 'Egreso') acc.egresos += Number(curr.monto) || 0;
+                        return acc;
+                    }, { ingresos: 0, egresos: 0 });
+                    totales.neto = totales.ingresos - totales.egresos;
+                    return totales;
                 }
             },
             mounted() {
                 // Cargar Propiedades
-                fetch(SHEETDB_URL)
-                    .then(res => res.json())
-                    .then(data => {
-                        if(Array.isArray(data)) {
-                            this.propiedades = data.map(item => ({...item, editando: false}));
-                        }
-                        this.cargandoPropiedades = false;
-                    })
-                    .catch(err => { console.error(err); this.cargandoPropiedades = false; });
+                fetch(SHEETDB_URL).then(res => res.json()).then(data => {
+                    if(Array.isArray(data)) this.propiedades = data.map(item => ({...item, editando: false}));
+                    this.cargandoPropiedades = false;
+                }).catch(() => this.cargandoPropiedades = false);
 
                 // Cargar Métricas
-                fetch(SHEETDB_METRICAS_URL)
-                    .then(res => res.json())
-                    .then(data => {
-                        if(Array.isArray(data) && data[0] && data[0].id) {
-                            this.metricas = data;
-                        }
-                    })
-                    .catch(err => console.error("Aún no hay métricas o error de conexión", err));
+                fetch(SHEETDB_METRICAS_URL).then(res => res.json()).then(data => {
+                    if(Array.isArray(data) && data[0] && data[0].id) this.metricas = data;
+                }).catch(() => console.error("Sin métricas iniciales"));
+
+                // Cargar Finanzas
+                fetch(SHEETDB_FINANZAS_URL).then(res => res.json()).then(data => {
+                    if(Array.isArray(data) && data[0] && data[0].id) this.finanzas = data;
+                }).catch(() => console.error("Sin finanzas iniciales"));
             },
             methods: {
-                // --- MÉTODOS DE LA CARTERA (Intactos) ---
                 agregarPropiedad() {
-                    const nueva = {
+                    this.propiedades.unshift({
                         id: Date.now().toString(), tipo: "", ubicacion: "", dormitorios: 0, banos: 0, superficie: 0,
                         precio: 0, estado: "En tasación", captador: "", asesor: "", tipoOperacion: "Reconversión GNI", 
                         leadAsociado: "", linkPublicacion: "", editando: true, esNueva: true
-                    };
-                    this.propiedades.unshift(nueva);
+                    });
                 },
                 guardarCambiosPropiedad(prop) {
                     prop.editando = false;
@@ -320,44 +387,40 @@
                         fetch(`${SHEETDB_URL}/id/${id}`, { method: 'DELETE' });
                     }
                 },
-                
-                // --- MÉTODOS DEL DASHBOARD (Nuevos) ---
                 formatearFecha(fechaStr) {
                     if(!fechaStr) return "";
                     const partes = fechaStr.split('-');
-                    return `${partes[2]}/${partes[1]}/${partes[0]}`; // Formato DD/MM/YYYY
+                    return `${partes[2]}/${partes[1]}/${partes[0]}`;
                 },
                 guardarMetrica() {
-                    // Preparamos el objeto a guardar
-                    const metricaLista = {
-                        id: Date.now().toString(),
-                        ...this.nuevaMetrica
-                    };
-                    
-                    // Actualizamos la vista local al instante
+                    const metricaLista = { id: Date.now().toString(), ...this.nuevaMetrica };
                     this.metricas.push(metricaLista);
-                    
-                    // Guardamos en Google Sheets (en la solapa Metricas)
                     fetch(SHEETDB_METRICAS_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ data: [metricaLista] })
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: [metricaLista] })
                     }).then(() => {
-                        // Reseteamos los números del formulario a 0, pero dejamos la fecha y portal actuales
-                        this.nuevaMetrica.visualizaciones = 0;
-                        this.nuevaMetrica.consultas = 0;
-                        this.nuevaMetrica.visitas = 0;
-                        this.nuevaMetrica.reservas = 0;
-                        this.nuevaMetrica.cierres = 0;
-                        alert("Métricas guardadas exitosamente en el reporte.");
-                    }).catch(() => {
-                        alert("Hubo un error al guardar la métrica. Revisá la conexión.");
+                        this.nuevaMetrica.visualizaciones = 0; this.nuevaMetrica.consultas = 0;
+                        this.nuevaMetrica.visitas = 0; this.nuevaMetrica.reservas = 0; this.nuevaMetrica.cierres = 0;
                     });
                 },
                 eliminarMetrica(id) {
-                    if(confirm("¿Querés eliminar este registro del reporte?")) {
+                    if(confirm("¿Eliminar este registro de portales?")) {
                         this.metricas = this.metricas.filter(m => m.id !== id);
                         fetch(`https://sheetdb.io/api/v1/qk3dben7rmg65/id/${id}?sheet=Metricas`, { method: 'DELETE' });
+                    }
+                },
+                guardarFinanza() {
+                    const finanzaLista = { id: Date.now().toString(), ...this.nuevaFinanza };
+                    this.finanzas.push(finanzaLista);
+                    fetch(SHEETDB_FINANZAS_URL, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: [finanzaLista] })
+                    }).then(() => {
+                        this.nuevaFinanza.concepto = ''; this.nuevaFinanza.monto = 0;
+                    });
+                },
+                eliminarFinanza(id) {
+                    if(confirm("¿Eliminar este movimiento financiero?")) {
+                        this.finanzas = this.finanzas.filter(f => f.id !== id);
+                        fetch(`https://sheetdb.io/api/v1/qk3dben7rmg65/id/${id}?sheet=Finanzas`, { method: 'DELETE' });
                     }
                 }
             }
