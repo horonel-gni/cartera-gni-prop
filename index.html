@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cartera GNI prop - UEC</title>
-    <!-- Favicon corporativo -->
-    <link rel="icon" type="image/png" href="favicon.png">
+    <title>UEC GNI - Gestión y Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="favicon.png">
     <script>
         tailwind.config = {
             theme: {
@@ -22,178 +21,347 @@
 </head>
 <body class="bg-gray-50 p-8 font-sans text-gray-800">
     <div id="app" class="max-w-7xl mx-auto">
-        <header class="mb-8 border-b-2 border-gni-blue pb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        
+        <!-- ENCABEZADO Y MENÚ DE PESTAÑAS -->
+        <header class="mb-8 border-b-2 border-gni-blue pb-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div class="flex items-center gap-6">
                 <img src="logo.png" alt="GNI Construimos Confianza" class="h-16 md:h-20 object-contain">
                 <div>
-                    <h1 class="text-3xl font-extrabold text-gni-blue uppercase tracking-tight">Cartera Propiedades</h1>
+                    <h1 class="text-3xl font-extrabold text-gni-blue uppercase tracking-tight">Plataforma UEC</h1>
                     <p class="text-lg text-gray-500 font-semibold mt-1">Unidad Estratégica de Comercialización</p>
                 </div>
             </div>
-            <div class="flex flex-col items-end gap-3">
-                <div class="text-gni-blue font-bold bg-white px-4 py-1 rounded shadow-sm border border-gray-200">
-                    Total activos: {{ propiedades.length }} propiedades
-                </div>
-                <button @click="agregarPropiedad" class="bg-gni-blue text-white px-6 py-2.5 rounded-lg shadow-md font-bold hover:bg-gni-light transition flex items-center gap-2">
-                    <span class="text-xl">+</span> Nueva Propiedad
+            
+            <!-- Botones de Navegación -->
+            <div class="flex gap-2 bg-gray-200 p-1 rounded-lg">
+                <button @click="vistaActual = 'cartera'" :class="vistaActual === 'cartera' ? 'bg-white text-gni-blue shadow' : 'text-gray-600 hover:text-gni-blue'" class="px-6 py-2 rounded-md font-bold transition">
+                    Cartera Propiedades
+                </button>
+                <button @click="vistaActual = 'dashboard'" :class="vistaActual === 'dashboard' ? 'bg-white text-gni-blue shadow' : 'text-gray-600 hover:text-gni-blue'" class="px-6 py-2 rounded-md font-bold transition">
+                    Dashboard Rendimiento
                 </button>
             </div>
         </header>
 
-        <div v-if="cargando" class="text-center py-12 text-xl font-bold text-gray-500">
-            Conectando con la base de datos...
-        </div>
-
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div v-for="prop in propiedades" :key="prop.id" class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
-                
-                <!-- VISTA LECTURA -->
-                <div v-if="!prop.editando" class="p-6">
-                    <div class="flex justify-between items-start mb-3">
-                        <h2 class="text-xl font-bold text-gni-blue leading-tight">{{ prop.tipo }} <br><span class="text-gray-600 text-lg font-semibold">{{ prop.ubicacion }}</span></h2>
-                        <span :class="prop.estado === 'Activo' ? 'bg-green-100 text-green-800' : (prop.estado === 'Vendido' ? 'bg-gray-200 text-gray-800' : 'bg-yellow-100 text-yellow-800')" class="px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
-                            {{ prop.estado }}
-                        </span>
-                    </div>
-                    
-                    <div class="text-3xl font-extrabold text-gni-blue mb-4">USD {{ Number(prop.precio).toLocaleString() }}</div>
-                    
-                    <div class="space-y-2 text-sm text-gray-700 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-gni-blue">Lead asociado:</span> 
-                            <span class="bg-blue-50 px-2 py-0.5 rounded text-blue-800 font-semibold border border-blue-100">{{ prop.leadAsociado }}</span>
-                        </div>
-                        <hr class="my-2 border-gray-200">
-                        <div class="flex items-center gap-2"><span class="font-bold">Captación:</span> {{ prop.captador }}</div>
-                        <div class="flex items-center gap-2"><span class="font-bold">Asesor asignado:</span> {{ prop.asesor }}</div>
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold">Operación:</span> 
-                            <span :class="prop.tipoOperacion === 'Reconversión GNI' ? 'text-gni-blue font-bold' : 'text-gray-600'">{{ prop.tipoOperacion }}</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold">Publicación:</span> 
-                            <a v-if="prop.linkPublicacion" :href="prop.linkPublicacion" target="_blank" class="text-blue-600 font-semibold hover:underline">Ver ficha ↗</a>
-                            <span v-else class="text-gray-400 italic">Pendiente de carga</span>
-                        </div>
-                        <hr class="my-2 border-gray-200">
-                        <div class="flex justify-between text-gray-600 font-semibold">
-                            <span>🛏️ {{ prop.dormitorios }} Dorm.</span>
-                            <span>🛁 {{ prop.banos }} Baños</span>
-                            <span>📐 {{ prop.superficie }} m²</span>
-                        </div>
-                    </div>
-                    
-                    <button @click="prop.editando = true" class="w-full bg-white text-gni-blue font-bold py-2.5 rounded-lg border-2 border-gni-blue hover:bg-gray-50 transition">
-                        Editar Ficha
-                    </button>
+        <!-- ========================================== -->
+        <!-- PESTAÑA 1: CARTERA DE PROPIEDADES (TU WEB ORIGINAL) -->
+        <!-- ========================================== -->
+        <div v-if="vistaActual === 'cartera'">
+            <div class="flex justify-between items-center mb-6">
+                <div class="text-gni-blue font-bold bg-white px-4 py-2 rounded shadow-sm border border-gray-200">
+                    Total activos: {{ propiedades.length }} propiedades
                 </div>
+                <button @click="agregarPropiedad" class="bg-gni-blue text-white px-6 py-2 rounded-lg shadow-md font-bold hover:bg-gni-light transition flex items-center gap-2">
+                    <span class="text-xl">+</span> Nueva Propiedad
+                </button>
+            </div>
 
-                <!-- VISTA EDICIÓN -->
-                <div v-else class="p-6 bg-gray-50 border-t-4 border-gni-blue">
-                    <h3 class="font-bold text-gni-blue mb-4 pb-2 border-b border-gray-300 uppercase text-sm">Modificando Inmueble</h3>
-                    <div class="space-y-3 text-sm">
-                        <div class="grid grid-cols-2 gap-2">
-                            <div><label class="block font-semibold mb-1">Tipo</label><input type="text" v-model="prop.tipo" class="w-full p-2 border rounded"></div>
-                            <div><label class="block font-semibold mb-1">Ubicación</label><input type="text" v-model="prop.ubicacion" class="w-full p-2 border rounded"></div>
+            <div v-if="cargandoPropiedades" class="text-center py-12 text-xl font-bold text-gray-500">
+                Cargando inventario...
+            </div>
+
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div v-for="prop in propiedades" :key="prop.id" class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+                    
+                    <!-- VISTA LECTURA -->
+                    <div v-if="!prop.editando" class="p-6">
+                        <div class="flex justify-between items-start mb-3">
+                            <h2 class="text-xl font-bold text-gni-blue leading-tight">{{ prop.tipo }} <br><span class="text-gray-600 text-lg font-semibold">{{ prop.ubicacion }}</span></h2>
+                            <span :class="prop.estado === 'Activo' ? 'bg-green-100 text-green-800' : (prop.estado === 'Vendido' ? 'bg-gray-200 text-gray-800' : 'bg-yellow-100 text-yellow-800')" class="px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
+                                {{ prop.estado }}
+                            </span>
                         </div>
-                        <div><label class="block font-semibold mb-1">Precio (USD)</label><input type="number" v-model.number="prop.precio" class="w-full p-2 border rounded font-bold text-gni-blue"></div>
-                        <div><label class="block font-semibold mb-1">Lead / Proyecto destino</label><input type="text" v-model="prop.leadAsociado" class="w-full p-2 border rounded bg-blue-50"></div>
-                        <div>
-                            <label class="block font-semibold mb-1">Estrategia Comercial</label>
-                            <select v-model="prop.tipoOperacion" class="w-full p-2 border rounded bg-white">
-                                <option>Reconversión GNI</option><option>Solo Venta</option>
-                            </select>
+                        <div class="text-3xl font-extrabold text-gni-blue mb-4">USD {{ Number(prop.precio).toLocaleString() }}</div>
+                        <div class="space-y-2 text-sm text-gray-700 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <div class="flex items-center gap-2"><span class="font-bold text-gni-blue">Lead asociado:</span> <span class="bg-blue-50 px-2 py-0.5 rounded text-blue-800 font-semibold border border-blue-100">{{ prop.leadAsociado }}</span></div>
+                            <hr class="my-2 border-gray-200">
+                            <div class="flex items-center gap-2"><span class="font-bold">Captación:</span> {{ prop.captador }}</div>
+                            <div class="flex items-center gap-2"><span class="font-bold">Asesor asignado:</span> {{ prop.asesor }}</div>
+                            <div class="flex items-center gap-2"><span class="font-bold">Operación:</span> <span :class="prop.tipoOperacion === 'Reconversión GNI' ? 'text-gni-blue font-bold' : 'text-gray-600'">{{ prop.tipoOperacion }}</span></div>
+                            <div class="flex items-center gap-2"><span class="font-bold">Publicación:</span> <a v-if="prop.linkPublicacion" :href="prop.linkPublicacion" target="_blank" class="text-blue-600 font-semibold hover:underline">Ver ficha ↗</a><span v-else class="text-gray-400 italic">Pendiente</span></div>
+                            <hr class="my-2 border-gray-200">
+                            <div class="flex justify-between text-gray-600 font-semibold">
+                                <span>🛏️ {{ prop.dormitorios }} Dorm.</span>
+                                <span>🛁 {{ prop.banos }} Baños</span>
+                                <span>📐 {{ prop.superficie }} m²</span>
+                            </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div><label class="block font-semibold mb-1">Captador</label><input type="text" v-model="prop.captador" class="w-full p-2 border rounded"></div>
-                            <div><label class="block font-semibold mb-1">Asesor asignado</label><input type="text" v-model="prop.asesor" class="w-full p-2 border rounded"></div>
-                        </div>
-                        <div><label class="block font-semibold mb-1">Link Externa</label><input type="url" v-model="prop.linkPublicacion" class="w-full p-2 border rounded"></div>
-                        <div class="grid grid-cols-3 gap-2 pt-3 border-t mt-3">
-                            <div><label class="block text-xs font-bold mb-1">Dorm.</label><input type="number" v-model.number="prop.dormitorios" class="w-full p-1.5 border rounded text-center"></div>
-                            <div><label class="block text-xs font-bold mb-1">Baños</label><input type="number" v-model.number="prop.banos" class="w-full p-1.5 border rounded text-center"></div>
-                            <div><label class="block text-xs font-bold mb-1">m²</label><input type="number" v-model.number="prop.superficie" class="w-full p-1.5 border rounded text-center"></div>
-                        </div>
-                        <div>
-                            <label class="block font-semibold mb-1 mt-2">Estado</label>
-                            <select v-model="prop.estado" class="w-full p-2 border rounded bg-white font-bold">
-                                <option>En tasación</option><option>Activo</option><option>Reservado</option><option>Vendido</option>
-                            </select>
-                        </div>
+                        <button @click="prop.editando = true" class="w-full bg-white text-gni-blue font-bold py-2.5 rounded-lg border-2 border-gni-blue hover:bg-gray-50 transition">
+                            Editar Ficha
+                        </button>
                     </div>
-                    <button @click="guardarCambios(prop)" class="mt-6 w-full bg-gni-blue text-white font-bold py-3 rounded-lg hover:bg-gni-light shadow-lg transition">
-                        Guardar Ficha
-                    </button>
-                    <button @click="eliminarPropiedad(prop.id)" class="mt-3 w-full text-red-500 text-xs font-bold hover:text-red-700 uppercase tracking-wider">
-                        Eliminar Registro
-                    </button>
-                </div>
 
+                    <!-- VISTA EDICIÓN -->
+                    <div v-else class="p-6 bg-gray-50 border-t-4 border-gni-blue">
+                        <h3 class="font-bold text-gni-blue mb-4 pb-2 border-b border-gray-300 uppercase text-sm">Modificando Inmueble</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div><label class="block font-semibold mb-1">Tipo</label><input type="text" v-model="prop.tipo" class="w-full p-2 border rounded"></div>
+                                <div><label class="block font-semibold mb-1">Ubicación</label><input type="text" v-model="prop.ubicacion" class="w-full p-2 border rounded"></div>
+                            </div>
+                            <div><label class="block font-semibold mb-1">Precio (USD)</label><input type="number" v-model.number="prop.precio" class="w-full p-2 border rounded font-bold text-gni-blue"></div>
+                            <div><label class="block font-semibold mb-1">Lead / Proyecto destino</label><input type="text" v-model="prop.leadAsociado" class="w-full p-2 border rounded bg-blue-50"></div>
+                            <div>
+                                <label class="block font-semibold mb-1">Estrategia Comercial</label>
+                                <select v-model="prop.tipoOperacion" class="w-full p-2 border rounded bg-white"><option>Reconversión GNI</option><option>Solo Venta</option></select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div><label class="block font-semibold mb-1">Captador</label><input type="text" v-model="prop.captador" class="w-full p-2 border rounded"></div>
+                                <div><label class="block font-semibold mb-1">Asesor asignado</label><input type="text" v-model="prop.asesor" class="w-full p-2 border rounded"></div>
+                            </div>
+                            <div><label class="block font-semibold mb-1">Link Externa</label><input type="url" v-model="prop.linkPublicacion" class="w-full p-2 border rounded"></div>
+                            <div class="grid grid-cols-3 gap-2 pt-3 border-t mt-3">
+                                <div><label class="block text-xs font-bold mb-1">Dorm.</label><input type="number" v-model.number="prop.dormitorios" class="w-full p-1.5 border rounded text-center"></div>
+                                <div><label class="block text-xs font-bold mb-1">Baños</label><input type="number" v-model.number="prop.banos" class="w-full p-1.5 border rounded text-center"></div>
+                                <div><label class="block text-xs font-bold mb-1">m²</label><input type="number" v-model.number="prop.superficie" class="w-full p-1.5 border rounded text-center"></div>
+                            </div>
+                            <div>
+                                <label class="block font-semibold mb-1 mt-2">Estado</label>
+                                <select v-model="prop.estado" class="w-full p-2 border rounded bg-white font-bold"><option>En tasación</option><option>Activo</option><option>Reservado</option><option>Vendido</option></select>
+                            </div>
+                        </div>
+                        <button @click="guardarCambiosPropiedad(prop)" class="mt-6 w-full bg-gni-blue text-white font-bold py-3 rounded-lg hover:bg-gni-light shadow-lg transition">Guardar Ficha</button>
+                        <button @click="eliminarPropiedad(prop.id)" class="mt-3 w-full text-red-500 text-xs font-bold hover:text-red-700 uppercase tracking-wider">Eliminar Registro</button>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <!-- ========================================== -->
+        <!-- PESTAÑA 2: DASHBOARD DE RENDIMIENTO (NUEVO)-->
+        <!-- ========================================== -->
+        <div v-if="vistaActual === 'dashboard'">
+            
+            <!-- Tarjetas de Resumen Ejecutivo -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-blue-500">
+                    <p class="text-sm font-bold text-gray-500 uppercase">Total Visualizaciones</p>
+                    <p class="text-3xl font-extrabold text-gni-blue mt-1">{{ totalesDashboard.visualizaciones }}</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-green-500">
+                    <p class="text-sm font-bold text-gray-500 uppercase">Total Consultas</p>
+                    <p class="text-3xl font-extrabold text-gni-blue mt-1">{{ totalesDashboard.consultas }}</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-yellow-500">
+                    <p class="text-sm font-bold text-gray-500 uppercase">Total Visitas</p>
+                    <p class="text-3xl font-extrabold text-gni-blue mt-1">{{ totalesDashboard.visitas }}</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-gni-blue">
+                    <p class="text-sm font-bold text-gray-500 uppercase">Cierres / Reservas</p>
+                    <p class="text-3xl font-extrabold text-gni-blue mt-1">{{ totalesDashboard.cierres }} <span class="text-lg text-gray-400">/ {{ totalesDashboard.reservas }}</span></p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Formulario de Carga Semanal -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 lg:col-span-1 h-fit">
+                    <h2 class="text-xl font-bold text-gni-blue mb-4 pb-2 border-b border-gray-200">Cargar Reporte Semanal</h2>
+                    <form @submit.prevent="guardarMetrica" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Fecha del reporte</label>
+                            <input type="date" v-model="nuevaMetrica.fecha" required class="w-full p-2 border rounded focus:border-gni-blue">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Portal Inmobiliario</label>
+                            <select v-model="nuevaMetrica.portal" required class="w-full p-2 border rounded focus:border-gni-blue bg-white">
+                                <option>ZonaProp</option>
+                                <option>MercadoLibre</option>
+                                <option>Clasificados LaVoz</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="block text-xs font-bold text-gray-600 mb-1">Visualizaciones</label><input type="number" v-model.number="nuevaMetrica.visualizaciones" min="0" required class="w-full p-2 border rounded"></div>
+                            <div><label class="block text-xs font-bold text-gray-600 mb-1">Consultas</label><input type="number" v-model.number="nuevaMetrica.consultas" min="0" required class="w-full p-2 border rounded"></div>
+                            <div><label class="block text-xs font-bold text-gray-600 mb-1">Visitas Físicas</label><input type="number" v-model.number="nuevaMetrica.visitas" min="0" required class="w-full p-2 border rounded"></div>
+                            <div><label class="block text-xs font-bold text-gray-600 mb-1">Reservas</label><input type="number" v-model.number="nuevaMetrica.reservas" min="0" required class="w-full p-2 border rounded"></div>
+                        </div>
+                        <div><label class="block text-xs font-bold text-gray-600 mb-1">Cierres Efectivos</label><input type="number" v-model.number="nuevaMetrica.cierres" min="0" required class="w-full p-2 border rounded"></div>
+                        
+                        <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition mt-4">
+                            Guardar Métricas
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Historial de Cargas -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 lg:col-span-2 overflow-hidden">
+                    <div class="p-6 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                        <h2 class="text-xl font-bold text-gni-blue">Historial de Rendimiento</h2>
+                        <span class="text-sm font-bold text-gray-500">Últimos registros</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gni-blue text-white text-sm uppercase tracking-wider">
+                                    <th class="p-4 font-semibold">Fecha</th>
+                                    <th class="p-4 font-semibold">Portal</th>
+                                    <th class="p-4 font-semibold text-center">Visual.</th>
+                                    <th class="p-4 font-semibold text-center">Consult.</th>
+                                    <th class="p-4 font-semibold text-center">Visitas</th>
+                                    <th class="p-4 font-semibold text-center">Res/Cierres</th>
+                                    <th class="p-4 font-semibold text-center"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm text-gray-700 divide-y divide-gray-200">
+                                <tr v-if="metricas.length === 0">
+                                    <td colspan="7" class="p-8 text-center text-gray-500 italic">No hay métricas cargadas aún.</td>
+                                </tr>
+                                <tr v-for="metrica in metricasOrdenadas" :key="metrica.id" class="hover:bg-gray-50">
+                                    <td class="p-4 font-bold">{{ formatearFecha(metrica.fecha) }}</td>
+                                    <td class="p-4 font-semibold text-gni-blue">{{ metrica.portal }}</td>
+                                    <td class="p-4 text-center">{{ metrica.visualizaciones }}</td>
+                                    <td class="p-4 text-center font-bold text-blue-600">{{ metrica.consultas }}</td>
+                                    <td class="p-4 text-center font-bold text-green-600">{{ metrica.visitas }}</td>
+                                    <td class="p-4 text-center">{{ metrica.reservas }} / {{ metrica.cierres }}</td>
+                                    <td class="p-4 text-center">
+                                        <button @click="eliminarMetrica(metrica.id)" class="text-red-500 hover:text-red-700 font-bold" title="Eliminar">✕</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-<script>
-    const { createApp } = Vue;
+    <script>
+        const { createApp } = Vue;
 
-    const SHEETDB_URL = "https://sheetdb.io/api/v1/qk3dben7rmg65"; 
+        // URL original (Propiedades - Hoja 1 por defecto)
+        const SHEETDB_URL = "https://sheetdb.io/api/v1/qk3dben7rmg65"; 
+        // Nueva URL apuntando específicamente a la hoja de métricas
+        const SHEETDB_METRICAS_URL = "https://sheetdb.io/api/v1/qk3dben7rmg65?sheet=Metricas";
 
-    createApp({
-        data() {
-            return {
-                propiedades: [],
-                cargando: true
-            }
-        },
-        mounted() {
-            fetch(SHEETDB_URL)
-                .then(response => response.json())
-                .then(data => {
-                    this.propiedades = data.map(item => ({...item, editando: false}));
-                    this.cargando = false;
-                })
-                .catch(error => {
-                    alert("Error al conectar con la base de datos.");
-                    this.cargando = false;
-                });
-        },
-        methods: {
-            agregarPropiedad() {
-                const nueva = {
-                    id: Date.now().toString(),
-                    tipo: "", ubicacion: "", dormitorios: 0, banos: 0, superficie: 0,
-                    precio: 0, estado: "En tasación", captador: "", asesor: "",
-                    tipoOperacion: "Reconversión GNI", leadAsociado: "", linkPublicacion: "",
-                    editando: true, esNueva: true
-                };
-                this.propiedades.unshift(nueva);
+        createApp({
+            data() {
+                return {
+                    vistaActual: 'cartera', // 'cartera' o 'dashboard'
+                    propiedades: [],
+                    cargandoPropiedades: true,
+                    
+                    // Datos del Dashboard
+                    metricas: [],
+                    nuevaMetrica: {
+                        fecha: new Date().toISOString().split('T')[0],
+                        portal: 'ZonaProp',
+                        visualizaciones: 0,
+                        consultas: 0,
+                        visitas: 0,
+                        reservas: 0,
+                        cierres: 0
+                    }
+                }
             },
-            guardarCambios(prop) {
-                prop.editando = false;
-                
-                const metodo = prop.esNueva ? 'POST' : 'PUT';
-                const endpoint = prop.esNueva ? SHEETDB_URL : `${SHEETDB_URL}/id/${prop.id}`;
-                
-                const datosLimpios = { ...prop };
-                delete datosLimpios.editando;
-                delete datosLimpios.esNueva;
-
-                fetch(endpoint, {
-                    method: metodo,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: [datosLimpios] })
-                }).then(() => {
-                    prop.esNueva = false;
-                });
+            computed: {
+                metricasOrdenadas() {
+                    // Ordena de la carga más reciente a la más antigua
+                    return [...this.metricas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                },
+                totalesDashboard() {
+                    // Calcula los totales para las tarjetas de arriba
+                    return this.metricas.reduce((acc, curr) => {
+                        acc.visualizaciones += Number(curr.visualizaciones) || 0;
+                        acc.consultas += Number(curr.consultas) || 0;
+                        acc.visitas += Number(curr.visitas) || 0;
+                        acc.reservas += Number(curr.reservas) || 0;
+                        acc.cierres += Number(curr.cierres) || 0;
+                        return acc;
+                    }, { visualizaciones: 0, consultas: 0, visitas: 0, reservas: 0, cierres: 0 });
+                }
             },
-            eliminarPropiedad(id) {
-                if(confirm("¿Estás seguro de eliminar este inmueble definitivamente?")) {
-                    this.propiedades = this.propiedades.filter(p => p.id !== id);
-                    fetch(`${SHEETDB_URL}/id/${id}`, { method: 'DELETE' });
+            mounted() {
+                // Cargar Propiedades
+                fetch(SHEETDB_URL)
+                    .then(res => res.json())
+                    .then(data => {
+                        if(Array.isArray(data)) {
+                            this.propiedades = data.map(item => ({...item, editando: false}));
+                        }
+                        this.cargandoPropiedades = false;
+                    })
+                    .catch(err => { console.error(err); this.cargandoPropiedades = false; });
+
+                // Cargar Métricas
+                fetch(SHEETDB_METRICAS_URL)
+                    .then(res => res.json())
+                    .then(data => {
+                        if(Array.isArray(data) && data[0] && data[0].id) {
+                            this.metricas = data;
+                        }
+                    })
+                    .catch(err => console.error("Aún no hay métricas o error de conexión", err));
+            },
+            methods: {
+                // --- MÉTODOS DE LA CARTERA (Intactos) ---
+                agregarPropiedad() {
+                    const nueva = {
+                        id: Date.now().toString(), tipo: "", ubicacion: "", dormitorios: 0, banos: 0, superficie: 0,
+                        precio: 0, estado: "En tasación", captador: "", asesor: "", tipoOperacion: "Reconversión GNI", 
+                        leadAsociado: "", linkPublicacion: "", editando: true, esNueva: true
+                    };
+                    this.propiedades.unshift(nueva);
+                },
+                guardarCambiosPropiedad(prop) {
+                    prop.editando = false;
+                    const metodo = prop.esNueva ? 'POST' : 'PUT';
+                    const endpoint = prop.esNueva ? SHEETDB_URL : `${SHEETDB_URL}/id/${prop.id}`;
+                    const datosLimpios = { ...prop };
+                    delete datosLimpios.editando; delete datosLimpios.esNueva;
+                    fetch(endpoint, {
+                        method: metodo, headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: [datosLimpios] })
+                    }).then(() => prop.esNueva = false);
+                },
+                eliminarPropiedad(id) {
+                    if(confirm("¿Estás seguro de eliminar este inmueble?")) {
+                        this.propiedades = this.propiedades.filter(p => p.id !== id);
+                        fetch(`${SHEETDB_URL}/id/${id}`, { method: 'DELETE' });
+                    }
+                },
+                
+                // --- MÉTODOS DEL DASHBOARD (Nuevos) ---
+                formatearFecha(fechaStr) {
+                    if(!fechaStr) return "";
+                    const partes = fechaStr.split('-');
+                    return `${partes[2]}/${partes[1]}/${partes[0]}`; // Formato DD/MM/YYYY
+                },
+                guardarMetrica() {
+                    // Preparamos el objeto a guardar
+                    const metricaLista = {
+                        id: Date.now().toString(),
+                        ...this.nuevaMetrica
+                    };
+                    
+                    // Actualizamos la vista local al instante
+                    this.metricas.push(metricaLista);
+                    
+                    // Guardamos en Google Sheets (en la solapa Metricas)
+                    fetch(SHEETDB_METRICAS_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: [metricaLista] })
+                    }).then(() => {
+                        // Reseteamos los números del formulario a 0, pero dejamos la fecha y portal actuales
+                        this.nuevaMetrica.visualizaciones = 0;
+                        this.nuevaMetrica.consultas = 0;
+                        this.nuevaMetrica.visitas = 0;
+                        this.nuevaMetrica.reservas = 0;
+                        this.nuevaMetrica.cierres = 0;
+                        alert("Métricas guardadas exitosamente en el reporte.");
+                    }).catch(() => {
+                        alert("Hubo un error al guardar la métrica. Revisá la conexión.");
+                    });
+                },
+                eliminarMetrica(id) {
+                    if(confirm("¿Querés eliminar este registro del reporte?")) {
+                        this.metricas = this.metricas.filter(m => m.id !== id);
+                        fetch(`https://sheetdb.io/api/v1/qk3dben7rmg65/id/${id}?sheet=Metricas`, { method: 'DELETE' });
+                    }
                 }
             }
-        }
-    }).mount('#app')
-</script>
+        }).mount('#app')
+    </script>
 </body>
 </html>
